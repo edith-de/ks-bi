@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>快手渠道BI看板 · 登录</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fff4ec 0%, #ffe8d6 100%);
+    padding: 20px;
+  }
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(179, 61, 0, 0.12);
+    padding: 44px 40px 36px;
+  }
+  .login-logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    background: linear-gradient(135deg, #ff6600 0%, #e65000 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(255, 102, 0, 0.35);
+  }
+  .login-logo svg { width: 34px; height: 34px; }
+  .login-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a1a1a;
+    letter-spacing: 0.5px;
+  }
+  .login-sub {
+    text-align: center;
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 8px;
+    margin-bottom: 30px;
+  }
+  .field { margin-bottom: 20px; }
+  .field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+  .field-input {
+    width: 100%;
+    padding: 13px 16px;
+    font-size: 15px;
+    color: #1e293b;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    transition: all 0.2s;
+    outline: none;
+  }
+  .field-input::placeholder { color: #cbd5e1; }
+  .field-input:focus {
+    border-color: #ff6600;
+    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.12);
+  }
+  .login-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff6600 0%, #e65000 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 6px 16px rgba(255, 102, 0, 0.3);
+  }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(255, 102, 0, 0.4); }
+  .login-btn:active { transform: translateY(0); }
+  .login-error {
+    color: #dc2626;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 14px;
+    min-height: 18px;
+    transition: opacity 0.2s;
+  }
+  .login-hint {
+    margin-top: 22px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="12" width="4" height="8" rx="1" fill="#ffffff"/>
+        <rect x="10" y="7" width="4" height="13" rx="1" fill="#ffe0cc"/>
+        <rect x="17" y="4" width="4" height="16" rx="1" fill="#ffffff"/>
+      </svg>
+    </div>
+    <div class="login-title">快手渠道BI看板</div>
+    <div class="login-sub">请登录以继续</div>
+
+    <form id="loginForm" autocomplete="off">
+      <div class="field">
+        <label class="field-label" for="username">用户名</label>
+        <input class="field-input" type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+      </div>
+      <div class="field">
+        <label class="field-label" for="password">密码</label>
+        <input class="field-input" type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <button class="login-btn" type="submit">登 录</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+
+    <div class="login-hint">如忘记密码请联系管理员重置</div>
+  </div>
+
+<script>
+  // ============================================================
+  //  账号配置（轻量防护）：密码以 SHA-256 哈希存储，非明文
+  //  ★ 新增账号：把新密码用 SHA-256 生成哈希后，按下方格式加一行
+  //  ★ 删除账号：把对应那一行删掉（或整行注释），该账号即无法再登录
+  // ============================================================
+  const ACCOUNTS = {
+    // 管理员账号（占位密码：kuaishou888）
+    'admin': { hash: '57f493cef31392118fc555e2d6313d03c3dc7ef55a0bff033f97918afc9d3db4', role: 'admin' },
+    // 普通账号（占位密码：kuaishou123）
+    'user':  { hash: '1af32ca119382ed308a5159e0c53fb6fbcb8ec554896ee97e5b73c146b27e168', role: 'user'  },
+    // 普通账号（密码：kuaishou666）
+    'vicky': { hash: '3e682283228402a627696d87f3fb50798b7e1a14d6d0bc95e51d0e1b85828994', role: 'user'  },
+    'lynn':  { hash: '3e682283228402a627696d87f3fb50798b7e1a14d6d0bc95e51d0e1b85828994', role: 'user'  },
+    'iiris': { hash: '3e682283228402a627696d87f3fb50798b7e1a14d6d0bc95e51d0e1b85828994', role: 'user'  },
+    'hajra': { hash: '3e682283228402a627696d87f3fb50798b7e1a14d6d0bc95e51d0e1b85828994', role: 'user'  },
+  };
+  const DASHBOARD_URL = 'dashboard.html'; // 登录成功后跳转的看板
+
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  const form = document.getElementById('loginForm');
+  const errEl = document.getElementById('loginError');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl.textContent = '';
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const acc = ACCOUNTS[u];
+    if (!acc) { errEl.textContent = '用户名或密码错误'; return; }
+    const h = await sha256(p);
+    if (h !== acc.hash) { errEl.textContent = '用户名或密码错误'; return; }
+    // 登录成功：写入会话标记后跳转
+    sessionStorage.setItem('ksbi_auth', '1');
+    sessionStorage.setItem('ksbi_user', u);
+    sessionStorage.setItem('ksbi_role', acc.role);
+    window.location.href = DASHBOARD_URL;
+  });
+</script>
+</body>
+</html>
