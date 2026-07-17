@@ -3600,7 +3600,7 @@ function renderProductBoard(cur, prev) {
   const prevProdMap = aggregateByProduct(prev);
 
   // 排序（支持 amount / qty / yoy）
-  let prodList = Object.entries(prodMap).filter(([,v]) => v.amount > 0 || v.qty > 0);
+  let prodList = Object.entries(prodMap).filter(([n,v]) => (v.amount > 0 || v.qty > 0) && n.indexOf('配件') === -1);
   if(sortKey === 'yoy') {
     const _pvY=state.prodView||'amount'; prodList = prodList.map(([n,v]) => { const pv = prevProdMap[n]; const _cv=_pvY==='gsv'?v.gsv:v.amount; const _pp=pv?(_pvY==='gsv'?pv.gsv:pv.amount):0; const yoy = _pp>0 ? (_cv-_pp)/_pp : -Infinity;
       return [n, v, yoy];
@@ -3611,7 +3611,7 @@ function renderProductBoard(cur, prev) {
   }
 
   const _pvT=state.prodView||'amount'; const totalAmt    = prodList.reduce((s,[,v])=>s+(_pvT==='gsv'?v.gsv:v.amount), 0);
-  const totalQtyAll = prodList.reduce((s,[,v])=>s+v.qty,    0);
+  const totalQtyAll = prodList.reduce((s,[,v])=>s+(_pvT==='gsv'?(v.gsvQty||0):v.qty),    0);
   const cL = cmpLabelShort();
 
   // 列标题排序状态
@@ -3774,8 +3774,8 @@ function renderProdTableRows(list, totalAmt, totalQtyAll, cL, prevProdMap, start
   tbody.innerHTML = list.map(([name,v],i) => {
     const rank=startIdx+i+1;
     const rankCls=rank===1?'top1':rank===2?'top2':rank===3?'top3':'other';
-    const _pvR=state.prodView||'amount'; const _amtR=_pvR==='gsv'?v.gsv:v.amount; const shareAmt = totalAmt    > 0 ? _amtR/totalAmt    : 0;
-    const shareQty = totalQtyAll > 0 ? v.qty/totalQtyAll    : 0;
+    const _pvR=state.prodView||'amount'; const _amtR=_pvR==='gsv'?v.gsv:v.amount; const _qtyR=_pvR==='gsv'?(v.gsvQty||0):v.qty; const shareAmt = totalAmt    > 0 ? _amtR/totalAmt    : 0;
+    const shareQty = totalQtyAll > 0 ? _qtyR/totalQtyAll    : 0;
     const pv = prevProdMap[name];
     const _ppR=pv?(_pvR==='gsv'?pv.gsv:pv.amount):0; const yoyAmt = _ppR>0 ? (_amtR-_ppR)/_ppR : null;
     const yoyCls = yoyAmt===null?'neutral':yoyAmt>0?'up':'down';
@@ -3787,7 +3787,7 @@ function renderProdTableRows(list, totalAmt, totalQtyAll, cL, prevProdMap, start
       <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${name}">${name}</td>
       <td>${fmtAmt(_amtR)}</td>
       <td><div class="prod-share-bar"><div class="prod-share-track"><div class="prod-share-fill" style="width:${Math.min(100,(shareAmt*100)).toFixed(1)}%"></div></div><span style="font-size:11px;color:#64748b;white-space:nowrap">${(shareAmt*100).toFixed(1)}%</span></div></td>
-      <td>${fmtQty(v.qty)}</td>
+      <td>${fmtQty(_qtyR)}</td>
       <td style="color:#64748b;font-size:12px">${(shareQty*100).toFixed(1)}%</td>
       <td class="prod-yoy ${yoyCls}">${yoyTxt}</td>
     </tr>`;
